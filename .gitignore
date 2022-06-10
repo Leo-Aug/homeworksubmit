@@ -37,3 +37,6 @@ env_require_docker/*
 !env_require_docker/.env
 !env_require_docker/standalone-mysql-5.7.yaml
 !env_require_docker/mysql
+
+*.log
+startservice.sh
