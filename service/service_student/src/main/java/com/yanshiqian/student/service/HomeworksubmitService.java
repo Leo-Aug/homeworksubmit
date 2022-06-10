@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,4 +31,6 @@ public interface HomeworksubmitService extends IService<Homeworksubmit> {
     void deleteSubmitHomework(String id);
 
     Map<String, Object> listPage(long current, long limit, HomeworksubmitQuery homeworksubmitQuery);
+
+    void sendFile(List<String> fileNameList) throws IOException;
 }

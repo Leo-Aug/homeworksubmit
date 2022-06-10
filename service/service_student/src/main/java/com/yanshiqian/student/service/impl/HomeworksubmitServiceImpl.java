@@ -11,7 +11,15 @@ import com.yanshiqian.student.mapper.HomeworksubmitMapper;
 import com.yanshiqian.student.service.HomeworksubmitService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -20,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,8 +50,8 @@ public class HomeworksubmitServiceImpl extends ServiceImpl<HomeworksubmitMapper,
 
     @Override
     public Homeworksubmit upload(MultipartFile file, Map<String, Object> map,  String courseId, String times,String year) {
-//        String filepath ="/usr/local/homework/"+client.getCourseName(courseId)+year+"/";
-        String filepath ="D://hometest/"+client.getCourseName(courseId)+year+"/";
+       String filepath ="homework/"+client.getCourseName(courseId)+year+"/";
+        // String filepath ="D://hometest/"+client.getCourseName(courseId)+year+"/";
         File targetFile = new File(filepath);
         if (!targetFile.exists()) {
             targetFile.mkdirs();
@@ -83,7 +92,8 @@ public class HomeworksubmitServiceImpl extends ServiceImpl<HomeworksubmitMapper,
 
     @Override
     public void downLoad(HttpServletResponse response,  String filename,String filename2) throws IOException, InvalidFormatException {
-        String filePath = "D://hometest" ;
+        // String filePath = "D://hometest" ;
+        String filePath = "homework";
 
         File file = new File(filePath + "/" + filename+"/"+filename2);
         if(file.exists()){
@@ -167,6 +177,62 @@ public class HomeworksubmitServiceImpl extends ServiceImpl<HomeworksubmitMapper,
         res.put("total",total);
         res.put("rows",records);
         return res;
+    }
+
+    @Override
+    public void sendFile(List<String> fileNameList) throws IOException {
+        String filePath = "/homework";
+
+        /*
+         * curl 'http://cheatchecker.cupfell.com/receivefile' \
+         * -H 'Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6' \
+         * -H 'Connection: keep-alive' \
+         * -H 'Content-Type: multipart/form-data;
+         * boundary=----WebKitFormBoundaryspWJU67Xc6hng6fw' \
+         * -H 'Origin: http://cheatchecker.cupfell.com' \
+         * -H 'Referer: http://cheatchecker.cupfell.com/docs' \
+         * -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+         * (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33' \
+         * -H 'accept: application/json' \
+         * --data-raw $'------WebKitFormBoundaryspWJU67Xc6hng6fw\r\nContent-Disposition:
+         * form-data; name="filelist";
+         * filename="“反邪教警示教育进校园”-“我要签名”活动.pdf"\r\nContent-Type:
+         * application/pdf\r\n\r\n\r\n------WebKitFormBoundaryspWJU67Xc6hng6fw\r\
+         * nContent-Disposition: form-data; name="filelist";
+         * filename="内聚与耦合.pdf"\r\nContent-Type:
+         * application/pdf\r\n\r\n\r\n------WebKitFormBoundaryspWJU67Xc6hng6fw--\r\n' \
+         * --compressed \
+         * --insecure
+         */
+        // 按照上述curl命令的格式发送请求
+           
+        // 创建表单
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setCharset(Charset.forName("UTF-8"));
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        builder.setContentType(ContentType.MULTIPART_FORM_DATA);
+        // 文件
+        for (String fileName : fileNameList) {
+            // 挨个加进 filelist 表项里
+            File file = new File(filePath + "/" + fileName);
+            if(file.exists()){
+                builder.addBinaryBody("filelist", file);
+            }
+        }
+        HttpEntity entity = builder.build();
+        // 发送请求
+        HttpPost httpPost = new HttpPost("http://cheatchecker.cupfell.com/receivefile");
+        httpPost.setEntity(entity);
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = null;
+        try {
+            response = client.execute(httpPost);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        HttpEntity responseEntity = response.getEntity();
+        String result = EntityUtils.toString(responseEntity);
+        System.out.println(result);
     }
 }
 

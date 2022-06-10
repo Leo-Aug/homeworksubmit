@@ -17,8 +17,11 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.Data;
+
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -69,6 +72,16 @@ public class HomeworksubmitController {
     public void downLoadWordFile(HttpServletResponse response,@PathVariable String filename,@PathVariable String filename2) throws IOException, InvalidFormatException {
           homeworksubmitService.downLoad(response,filename,filename2);
     }
+    
+    /*
+    向查重系统发送文件
+    */
+    @PostMapping("/sendFile")
+    public R sendFile(@RequestBody List<String> fileNameList) throws IOException {
+        homeworksubmitService.sendFile(fileNameList);
+        return R.ok();
+    }
+
     @GetMapping("deleteCourse/{id}")
     public R deleteCourse(@PathVariable String id){
         QueryWrapper<Homeworksubmit> queryWrapper = new QueryWrapper<>();
